@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Guide to OTC Stocks</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Neutrals -->
+    <!-- Application Structure Plan: A thematic, single-page application designed for non-linear exploration. The structure prioritizes user learning by grouping related concepts. A sticky navigation bar allows users to jump between key themes: 'The Basics' for foundational knowledge, 'Market Tiers' for comparative analysis, 'Risks vs. Rewards' for decision-making context, and 'Company Journeys' for real-world examples. This task-oriented design is more intuitive for a beginner than a linear report, encouraging interaction with clickable cards and dynamic charts to deepen understanding at their own pace. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: OTC vs. Exchange characteristics. Goal: Compare. Viz: Interactive Bar Chart. Interaction: Hover for details. Justification: Visually highlights key differences in regulation, transparency, and liquidity. Library: Chart.js.
+        - Report Info: OTC Market Tiers (OTCQX, OTCQB, Pink). Goal: Organize & Compare Risk. Viz: Interactive Cards + Risk Meter (HTML/CSS). Interaction: Click card to display details and update the visual risk meter. Justification: Simplifies complex tier information into a digestible, interactive format. Library: Vanilla JS.
+        - Report Info: Pros and Cons of OTC investing. Goal: Compare. Viz: Doughnut Chart & Side-by-Side Cards. Interaction: Hover on cards. Justification: Provides a balanced, at-a-glance view of the investment proposition. Library: Chart.js.
+        - Report Info: Uplisting/Delisting examples. Goal: Show Change Over Time. Viz: HTML/CSS Timeline. Interaction: Click to reveal company stories. Justification: Tells a compelling narrative of company lifecycles in a visually engaging way. Library: Vanilla JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #333D4B;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .tier-card.selected {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-800">OTC Stocks Explained</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#basics" class="nav-link active text-gray-600 font-medium pb-1">The Basics</a>
+                <a href="#tiers" class="nav-link text-gray-600 font-medium pb-1">Market Tiers</a>
+                <a href="#risk-reward" class="nav-link text-gray-600 font-medium pb-1">Risks vs. Rewards</a>
+                <a href="#journeys" class="nav-link text-gray-600 font-medium pb-1">Company Journeys</a>
+            </div>
+             <button id="mobile-menu-button" class="md:hidden text-gray-700 focus:outline-none">
+                <span class="text-2xl">☰</span>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+            <a href="#basics" class="block py-2 nav-link mobile-nav-link active">The Basics</a>
+            <a href="#tiers" class="block py-2 nav-link mobile-nav-link">Market Tiers</a>
+            <a href="#risk-reward" class="block py-2 nav-link mobile-nav-link">Risks vs. Rewards</a>
+            <a href="#journeys" class="block py-2 nav-link mobile-nav-link">Company Journeys</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+        
+        <section id="basics" class="content-section active">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4 text-gray-800">What is an OTC Stock?</h2>
+                <p class="text-lg max-w-3xl mx-auto text-gray-600">
+                    An Over-the-Counter (OTC) stock is a share of a company that isn't traded on a major national exchange like the NYSE or Nasdaq. Instead, these stocks are traded directly between parties through a dealer network. This section breaks down the core concepts, explains why companies choose this path, and visually compares it to traditional exchange trading.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-12 items-center">
+                <div>
+                    <h3 class="text-2xl font-semibold mb-3 text-gray-700">Why Go OTC?</h3>
+                    <p class="text-gray-600 mb-4">Companies often trade OTC because they don't meet the strict financial or reporting requirements of major exchanges. This path offers a more accessible and less expensive way to become publicly traded and raise capital, especially for smaller, emerging businesses or large international firms wanting to reach U.S. investors without a full listing.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <h4 class="font-semibold text-lg mb-3">Key Differences at a Glance</h4>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <span class="text-blue-500 mr-3 mt-1">●</span>
+                            <div><strong>Structure:</strong> OTC is a decentralized dealer network, while exchanges are centralized marketplaces.</div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-500 mr-3 mt-1">●</span>
+                            <div><strong>Regulation:</strong> OTC has less stringent rules, whereas exchanges are heavily regulated by the SEC.</div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-500 mr-3 mt-1">●</span>
+                            <div><strong>Transparency:</strong> Information on OTC companies can be limited, unlike the high transparency of exchange-listed firms.</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-2xl font-semibold text-center mb-6 text-gray-700">Visualizing the Difference: OTC vs. Major Exchanges</h3>
+                <div class="chart-container bg-white p-4 rounded-lg shadow-md border border-gray-200">
+                    <canvas id="marketComparisonChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="tiers" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4 text-gray-800">Understanding the Market Tiers</h2>
+                <p class="text-lg max-w-3xl mx-auto text-gray-600">
+                    The OTC market isn't a free-for-all. The OTC Markets Group organizes companies into three distinct tiers based on the quality and quantity of information they provide. This system is crucial for investors to quickly gauge the transparency and potential risk of a stock. Click on each tier to learn more and see how the risk level changes.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 mb-8">
+                <div id="tier-otcqx" class="tier-card card p-6 bg-white rounded-lg border-2 border-gray-200 cursor-pointer selected">
+                    <h3 class="text-2xl font-bold text-blue-600">OTCQX®</h3>
+                    <p class="font-semibold text-gray-700 mb-2">The Best Market</p>
+                    <p class="text-sm text-gray-600">For established, investor-focused U.S. and international companies that meet high financial standards.</p>
+                </div>
+                <div id="tier-otcqb" class="tier-card card p-6 bg-white rounded-lg border-2 border-gray-200 cursor-pointer">
+                    <h3 class="text-2xl font-bold text-green-600">OTCQB®</h3>
+                    <p class="font-semibold text-gray-700 mb-2">The Venture Market</p>
+                    <p class="text-sm text-gray-600">For early-stage and developing U.S. and international companies committed to providing regular public information.</p>
+                </div>
+                <div id="tier-pink" class="tier-card card p-6 bg-white rounded-lg border-2 border-gray-200 cursor-pointer">
+                    <h3 class="text-2xl font-bold text-pink-600">Pink®</h3>
+                    <p class="font-semibold text-gray-700 mb-2">The Open Market</p>
+                    <p class="text-sm text-gray-600">Offers trading in a wide spectrum of equities with variable levels of company information available.</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-8 rounded-lg shadow-md border border-gray-200">
+                <div class="grid md:grid-cols-3 gap-8 items-center">
+                    <div id="tier-details" class="md:col-span-2">
+                        
+                    </div>
+                    <div class="text-center">
+                        <h4 class="text-lg font-semibold mb-3 text-gray-700">Associated Risk Level</h4>
+                        <div class="w-full bg-gray-200 rounded-full h-6">
+                            <div id="risk-meter-bar" class="bg-blue-600 h-6 rounded-full text-white text-sm flex items-center justify-center transition-all duration-500" style="width: 25%;">Low</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="risk-reward" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4 text-gray-800">Weighing the Risks & Rewards</h2>
+                <p class="text-lg max-w-3xl mx-auto text-gray-600">
+                    Investing in OTC stocks presents a classic trade-off: the potential for high returns is balanced by significant risks. The market's lower transparency and liquidity can create opportunities for growth but also expose investors to volatility and fraud. This section breaks down the key pros and cons to help you understand the full picture.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-2xl font-semibold mb-4 text-red-600">The Risks to Consider</h3>
+                    <div class="space-y-4">
+                        <div class="card bg-white p-4 rounded-lg border border-red-200">
+                            <h4 class="font-bold">Low Transparency</h4>
+                            <p class="text-sm text-gray-600">Limited public information makes it hard to research a company's financial health, increasing investment risk.</p>
+                        </div>
+                        <div class="card bg-white p-4 rounded-lg border border-red-200">
+                            <h4 class="font-bold">Low Liquidity & High Volatility</h4>
+                            <p class="text-sm text-gray-600">Fewer buyers and sellers can lead to wide price swings and difficulty selling shares quickly at a fair price.</p>
+                        </div>
+                        <div class="card bg-white p-4 rounded-lg border border-red-200">
+                            <h4 class="font-bold">Potential for Fraud</h4>
+                            <p class="text-sm text-gray-600">The less-regulated environment can be susceptible to scams like "pump and dump" schemes.</p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-semibold mb-4 text-green-600">The Potential Rewards</h3>
+                    <div class="space-y-4">
+                        <div class="card bg-white p-4 rounded-lg border border-green-200">
+                            <h4 class="font-bold">Access to Emerging Companies</h4>
+                            <p class="text-sm text-gray-600">Invest in small, high-growth companies before they're big enough for a major exchange.</p>
+                        </div>
+                        <div class="card bg-white p-4 rounded-lg border border-green-200">
+                            <h4 class="font-bold">Investment in Foreign Giants</h4>
+                            <p class="text-sm text-gray-600">Buy shares of major international companies like Adidas or Roche without needing a foreign broker.</p>
+                        </div>
+                        <div class="card bg-white p-4 rounded-lg border border-green-200">
+                            <h4 class="font-bold">High Return Potential</h4>
+                            <p class="text-sm text-gray-600">Low share prices can lead to significant gains if a company succeeds and "uplists" to a major exchange.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+             <div class="mt-12">
+                <h3 class="text-2xl font-semibold text-center mb-6 text-gray-700">Hypothetical Portfolio Profile</h3>
+                <div class="chart-container bg-white p-4 rounded-lg shadow-md border border-gray-200">
+                    <canvas id="riskRewardChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="journeys" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4 text-gray-800">Real-World Company Journeys</h2>
+                <p class="text-lg max-w-3xl mx-auto text-gray-600">
+                    The path of an OTC stock can lead to incredible success or significant decline. Some companies use the OTC market as a launchpad to a major exchange ("uplisting"), while others land there after failing to meet exchange standards ("delisting"). Explore these real-world examples to see the lifecycle of an OTC stock in action.
+                </p>
+            </div>
+            
+            <div class="relative border-l-2 border-blue-500 ml-6 md:ml-0 md:mx-auto md:max-w-3xl">
+                <div class="mb-10 ml-8">
+                    <span class="absolute flex items-center justify-center w-6 h-6 bg-blue-200 rounded-full -left-3 ring-8 ring-white">
+                        <span class="text-blue-800">▲</span>
+                    </span>
+                    <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+                        <h3 class="text-lg font-semibold text-green-600">The Uplisting Success Story</h3>
+                        <p class="text-sm text-gray-600">Companies like <strong class="journey-link cursor-pointer text-blue-600 hover:underline">Advanced Micro Devices (AMD)</strong> and <strong class="journey-link cursor-pointer text-blue-600 hover:underline">Medifast</strong> started on the OTC market. After periods of growth and meeting stringent requirements, they successfully uplisted to major exchanges like Nasdaq and the NYSE, delivering substantial returns to early investors.</p>
+                    </div>
+                </div>
+                <div class="mb-10 ml-8">
+                    <span class="absolute flex items-center justify-center w-6 h-6 bg-blue-200 rounded-full -left-3 ring-8 ring-white">
+                        <span class="text-blue-800">●</span>
+                    </span>
+                    <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+                        <h3 class="text-lg font-semibold text-gray-700">Global Giants on OTC</h3>
+                        <p class="text-sm text-gray-600">Not all OTC stocks are small startups. The top tier, OTCQX, is home to large, stable international companies like <strong class="journey-link cursor-pointer text-blue-600 hover:underline">Volkswagen AG</strong> and <strong class="journey-link cursor-pointer text-blue-600 hover:underline">Adidas AG</strong>. They use the OTC market to give U.S. investors easy access to their shares.</p>
+                    </div>
+                </div>
+                <div class="ml-8">
+                    <span class="absolute flex items-center justify-center w-6 h-6 bg-blue-200 rounded-full -left-3 ring-8 ring-white">
+                        <span class="text-blue-800">▼</span>
+                    </span>
+                    <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+                        <h3 class="text-lg font-semibold text-red-600">The Delisting Cautionary Tale</h3>
+                        <p class="text-sm text-gray-600">Conversely, companies that fail to meet exchange standards get delisted and move to the OTC market. This happened to well-known brands like <strong class="journey-link cursor-pointer text-blue-600 hover:underline">Bed Bath & Beyond</strong> and <strong class="journey-link cursor-pointer text-blue-600 hover:underline">Revlon</strong> after facing financial distress, resulting in a loss of liquidity and value for shareholders.</p>
+                    </div>
+                </div>
+            </div>
+            <div id="journey-details-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4">
+                <div class="bg-white rounded-lg p-8 max-w-md w-full relative">
+                    <button id="close-modal" class="absolute top-2 right-4 text-2xl font-bold">&times;</button>
+                    <h3 id="modal-title" class="text-2xl font-bold mb-4"></h3>
+                    <p id="modal-content" class="text-gray-600"></p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p>This interactive guide is for informational purposes only and does not constitute financial advice. Investing in OTC stocks involves significant risk.</p>
+            <p class="text-sm text-gray-400 mt-2">© 2025 OTC Stocks Explained. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+            const contentSections = document.querySelectorAll('.content-section');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            const setActiveLink = (targetId) => {
+                navLinks.forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href') === `#${targetId}`);
+                });
+                mobileNavLinks.forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href') === `#${targetId}`);
+                });
+            };
+
+            const showSection = (targetId) => {
+                contentSections.forEach(section => {
+                    section.classList.toggle('active', section.id === targetId);
+                });
+                setActiveLink(targetId);
+                window.scrollTo(0, 0);
+            };
+
+            const handleNavClick = (e) => {
+                e.preventDefault();
+                const targetId = e.currentTarget.getAttribute('href').substring(1);
+                showSection(targetId);
+                if (mobileMenu.classList.contains('hidden') === false) {
+                    mobileMenu.classList.add('hidden');
+                }
+            };
+            
+            navLinks.forEach(link => link.addEventListener('click', handleNavClick));
+            mobileNavLinks.forEach(link => link.addEventListener('click', handleNavClick));
+
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            const marketComparisonData = {
+                labels: ['Regulation', 'Transparency', 'Liquidity', 'Listing Costs'],
+                datasets: [
+                    {
+                        label: 'Major Exchanges (NYSE, Nasdaq)',
+                        data: [90, 95, 85, 80],
+                        backgroundColor: 'rgba(37, 99, 235, 0.7)',
+                        borderColor: 'rgba(37, 99, 235, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'OTC Markets',
+                        data: [40, 35, 30, 20],
+                        backgroundColor: 'rgba(219, 39, 119, 0.7)',
+                        borderColor: 'rgba(219, 39, 119, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            };
+
+            const marketComparisonChartCtx = document.getElementById('marketComparisonChart').getContext('2d');
+            new Chart(marketComparisonChartCtx, {
+                type: 'bar',
+                data: marketComparisonData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: { display: true, text: 'Relative Score' }
+                        }
+                    },
+                    plugins: {
+                        title: { display: true, text: 'Market Characteristics Comparison' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw}/100`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const tierData = {
+                otcqx: {
+                    title: "OTCQX: The Best Market",
+                    description: "This is the highest tier, for established companies that meet strict financial and disclosure standards. Audited financials are required, and penny stocks or shell companies are prohibited. It's the most transparent and least risky part of the OTC world, often including large international firms like Volkswagen and Roche.",
+                    risk: 25,
+                    color: 'bg-blue-600',
+                    level: 'Low'
+                },
+                otcqb: {
+                    title: "OTCQB: The Venture Market",
+                    description: "Designed for developing companies, this tier requires annual certification, audited financials, and a minimum bid price of $0.01. It offers more transparency than the Pink market, serving as a stepping stone for companies aiming for growth and greater investor visibility.",
+                    risk: 60,
+                    color: 'bg-green-600',
+                    level: 'Moderate'
+                },
+                pink: {
+                    title: "Pink: The Open Market",
+                    description: "This is the most speculative tier with the widest range of companies, from legitimate businesses to those with no public information at all. Disclosure is variable and often voluntary. This lack of information creates the highest risk of fraud and manipulation.",
+                    risk: 90,
+                    color: 'bg-pink-600',
+                    level: 'High'
+                }
+            };
+
+            const tierCards = document.querySelectorAll('.tier-card');
+            const tierDetailsContainer = document.getElementById('tier-details');
+            const riskMeterBar = document.getElementById('risk-meter-bar');
+
+            const updateTierDetails = (tierId) => {
+                const data = tierData[tierId];
+                tierDetailsContainer.innerHTML = `
+                    <h3 class="text-2xl font-bold mb-2">${data.title}</h3>
+                    <p class="text-gray-600">${data.description}</p>
+                `;
+                riskMeterBar.style.width = `${data.risk}%`;
+                riskMeterBar.className = `h-6 rounded-full text-white text-sm flex items-center justify-center transition-all duration-500 ${data.color}`;
+                riskMeterBar.textContent = data.level;
+
+                tierCards.forEach(card => {
+                    card.classList.toggle('selected', card.id === `tier-${tierId}`);
+                });
+            };
+
+            tierCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const tierId = card.id.split('-')[1];
+                    updateTierDetails(tierId);
+                });
+            });
+
+            updateTierDetails('otcqx');
+
+            const riskRewardChartCtx = document.getElementById('riskRewardChart').getContext('2d');
+            new Chart(riskRewardChartCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['High Growth Potential', 'Access to Unique Companies', 'Volatility Risk', 'Liquidity Risk', 'Information Risk'],
+                    datasets: [{
+                        label: 'Portfolio Profile',
+                        data: [30, 20, 20, 15, 15],
+                        backgroundColor: [
+                            'rgba(22, 163, 74, 0.7)',
+                            'rgba(37, 99, 235, 0.7)',
+                            'rgba(220, 38, 38, 0.7)',
+                            'rgba(249, 115, 22, 0.7)',
+                            'rgba(107, 114, 128, 0.7)'
+                        ],
+                        borderColor: '#FDFBF8',
+                        borderWidth: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        title: { display: true, text: 'Balancing Potential Upside with Inherent Risks' }
+                    }
+                }
+            });
+            
+            const journeyLinks = document.querySelectorAll('.journey-link');
+            const modal = document.getElementById('journey-details-modal');
+            const closeModalButton = document.getElementById('close-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalContent = document.getElementById('modal-content');
+
+            const journeyDetails = {
+                'Advanced Micro Devices (AMD)': {
+                    title: 'AMD: From OTC to Tech Giant',
+                    content: 'Once trading for under two dollars per share on the OTC market, AMD successfully grew its business, met exchange requirements, and uplisted to become a leading global semiconductor company and a major competitor to Intel.'
+                },
+                'Medifast': {
+                    title: 'Medifast: A Healthy Uplisting',
+                    content: 'This nutrition company traded on the OTC market for years before uplisting to the NYSE. The move brought greater visibility and investor confidence, leading to a massive increase in its stock value.'
+                },
+                'Volkswagen AG': {
+                    title: 'Volkswagen: Global Access via OTC',
+                    content: 'As a major German automaker, Volkswagen uses the OTCQX market to make its shares (as American Depositary Receipts) easily available to U.S. investors without the cost and complexity of a dual listing on a major U.S. exchange.'
+                },
+                'Adidas AG': {
+                    title: 'Adidas: A Sporting Presence in the US Market',
+                    content: 'Similar to Volkswagen, the global sportswear brand Adidas trades on the OTCQX, allowing American investors to easily buy into a well-established, reputable international company.'
+                },
+                'Bed Bath & Beyond': {
+                    title: 'Bed Bath & Beyond: The Delisting Path',
+                    content: 'After facing severe financial difficulties and filing for bankruptcy, the well-known retailer was delisted from the Nasdaq exchange. Its stock then moved to the OTC Pink market, where it traded with much higher risk and lower liquidity.'
+                },
+                'Revlon': {
+                    title: 'Revlon: A Cautionary Tale',
+                    content: 'The iconic cosmetics company was delisted from the NYSE due to its failure to meet listing standards amid its bankruptcy proceedings. The stock subsequently traded on the OTC market, a common fate for companies in financial distress.'
+                }
+            };
+
+            journeyLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    const companyName = e.target.textContent;
+                    const details = journeyDetails[companyName];
+                    if (details) {
+                        modalTitle.textContent = details.title;
+                        modalContent.textContent = details.content;
+                        modal.classList.remove('hidden');
+                        modal.classList.add('flex');
+                    }
+                });
+            });
+
+            const closeModal = () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            };
+
+            closeModalButton.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
